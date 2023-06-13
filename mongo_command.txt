@@ -61,3 +61,59 @@ db.vehicles.updateMany({},
       }
    }
 );
+
+# convert false building to real building
+#################################################
+db.residents.find().forEach(function(doc) {
+	var b = doc.building
+	if(b == "4-Feb"){
+		b = "4/2";
+	} else if (b == "4-Mar") {
+		b = "4/3"
+	} else if (b == "4-Apr"){
+		b = "4/4"
+	} else {
+		b = "4/5"
+	}
+	db.residents.updateOne({_id:doc._id},{
+		$set:{
+			building: b
+		}
+	})
+})
+
+# add room ref to resident
+#################################################
+db.rooms.find().forEach(function(doc){
+	var bd = doc.building_address;
+	var addr = doc.address;
+	
+	var res = db.residents.find({building: bd, address: addr});
+	
+	var resIds = res.map(function(r){
+		return r._id;
+	})
+	
+	db.residents.updateMany({building:bd, address:addr},{
+		$set:{
+			room_ref:doc._id
+		}
+	})
+});
+
+# drop unneccery field from resident
+################################################
+db.residents.updateMany({},{
+	$unset:{
+		building:"",
+		address:""
+	}
+})
+
+# drop unneccery field from electric_meter
+###############################################
+db.electric_meter.updateMany({},{
+	$unset:{
+		address:""
+	}
+})
