@@ -1,0 +1,63 @@
+# add resident ref to vehicle
+#################################################
+db.residents.find({vehicle_ref: {$exists:true}}).forEach(function(doc) {
+	db.vehicles.updateMany({driver: doc.prefix+doc.name+ " "+ doc.lastname}, {
+			$set:{
+				resident_ref: doc._id
+			}
+		}
+	)
+})
+
+# add vehicle ref array to resident
+#################################################
+db.residents.find().forEach(function(doc) {
+  var vehicles = db.vehicles.find({
+    driver: doc.prefix + doc.name + " " + doc.lastname
+  }).toArray();
+  
+  var vehicleIds = vehicles.map(function(vehicle) {
+    return vehicle._id;
+  });
+  if(vehicleIds.length > 0){
+  	db.residents.updateOne({ _id: doc._id },
+    		{ $set: { vehicle_ref: vehicleIds } }
+	  );
+  }
+});
+
+# add electric meter ref to resident
+#################################################
+db.residents.find({'is_owner':true}).forEach(function(doc) {
+   var raddr = doc.address;
+   var refaddr = db.electric_meter.findOne({address: raddr});
+   db.residents.updateOne({_id: doc._id},{
+      $set: {
+         electric_meter_ref:refaddr._id
+      }
+   })
+});
+
+# add resident ref to electric meter
+#################################################
+db.electric_meter.find().forEach(function(doc){
+	var res = db.residents.findOne({address:doc.address, is_owner:true});
+	if(res){
+		db.electric_meter.updateOne({_id:doc._id},{
+			$set: {
+				resident_ref:res._id
+			}
+		})
+	}
+})
+
+# drop unneccessary fields from vehicle
+#################################################
+db.vehicles.updateMany({}, 
+   {$unset: {
+	address: "",
+	driver: "",
+	phone: ""
+      }
+   }
+);

@@ -1,0 +1,5 @@
+mongo_cred.txt
+*.xlsx
+*.csv
+clean/.venv/
+
