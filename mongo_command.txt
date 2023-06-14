@@ -30,20 +30,20 @@ db.residents.find().forEach(function(doc) {
 #################################################
 db.residents.find({'is_owner':true}).forEach(function(doc) {
    var raddr = doc.address;
-   var refaddr = db.electric_meter.findOne({address: raddr});
+   var refaddr = db.e_meters.findOne({address: raddr});
    db.residents.updateOne({_id: doc._id},{
       $set: {
-         electric_meter_ref:refaddr._id
+         e_meter_ref:refaddr._id
       }
    })
 });
 
 # add resident ref to electric meter
 #################################################
-db.electric_meter.find().forEach(function(doc){
+db.e_meters.find().forEach(function(doc){
 	var res = db.residents.findOne({address:doc.address, is_owner:true});
 	if(res){
-		db.electric_meter.updateOne({_id:doc._id},{
+		db.e_meters.updateOne({_id:doc._id},{
 			$set: {
 				resident_ref:res._id
 			}
@@ -53,14 +53,14 @@ db.electric_meter.find().forEach(function(doc){
 
 # drop unneccessary fields from vehicle
 #################################################
-db.vehicles.updateMany({}, 
-   {$unset: {
-	address: "",
-	driver: "",
-	phone: ""
-      }
-   }
-);
+#db.vehicles.updateMany({}, 
+#   {$unset: {
+#	address: "",
+#	driver: "",
+#	phone: ""
+#      }
+#   }
+#);
 
 # convert false building to real building
 #################################################
@@ -112,8 +112,9 @@ db.residents.updateMany({},{
 
 # drop unneccery field from electric_meter
 ###############################################
-db.electric_meter.updateMany({},{
+db.e_meters.updateMany({},{
 	$unset:{
 		address:""
+		
 	}
 })
