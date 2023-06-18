@@ -23,5 +23,6 @@
 -   เพิ่ม sorting ให้ table [1.5 Hr]
 -   เพิ่ม search bar ตาม regex [1 Hr]
 -   ปรับโครงสร้างตอน load ข้อมูลจาก database [1 Hr]
--   เพิ่มปุ่ม add และสร้างหน้า form แต่ยังบัคอยู่ [5 Hr]
+-   เพิ่มปุ่ม add และสร้างหน้า form แต่ยังบัคเรื่อง keyboard layout อยู่ [5 Hr]
+-   แก้บัคหน้า form และเพิ่มข้อมูลลง database [2 Hr]
 
