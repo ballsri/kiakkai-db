@@ -118,3 +118,26 @@ db.e_meters.updateMany({},{
 		
 	}
 })
+
+# create data logging
+###############################################
+db.collectionName.updateMany({}, {
+$set: {
+		"created_by": "system",
+		"created_at": new Date("0001-01-01T00:00:00.000Z"),
+		"updated_by": null,
+		"updated_at": null,
+		"removed_by": null,
+		"removed_at": null,
+	}
+})
+
+# create join date for every residents
+###############################################
+db.residents.updateMany({}, {
+$set: {
+		"join_at": new Date("0001-01-01T00:00:00.000Z"),
+		"leave_at": null,
+		
+	}
+})

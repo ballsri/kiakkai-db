@@ -219,6 +219,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  never_behind_keyboard:
+    dependency: "direct main"
+    description:
+      name: never_behind_keyboard
+      sha256: "3d437f6ae16a4ffcaf98e93534abd79a71a6ceaa30c7bf5679a1fba22886cbd6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   packages_extensions:
     dependency: transitive
     description:
@@ -386,3 +394,4 @@ packages:
     version: "0.4.5"
 sdks:
   dart: ">=3.0.3 <4.0.0"
+  flutter: ">=1.17.0"

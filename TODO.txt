@@ -8,10 +8,19 @@ TODO
     - [Done]เก็บข้อมูลรถยนต์ มอไซด์ ของแต่ละห้อง
         - ทำแล้ว
     - app 
+        - [In Progress] เพิ่ม tab สำหรับจัดการ user และ approve user
         - [In Progress]หน้าแรกจะเป็นแบบกดไปแล้วข้อมูลของห้องนั้นๆจะเพิ่มขึ้นมา [high priority]
             - คงเป็น มีห้องให้กด แล้วเปลี่ยนหน้าไปดูข้อมูลของห้องนั้นๆ กับเจ้าของห้อง พอกดไปดูผู้อยู่อาศัย ก็จะขึ้นชื่อทุกคน แต่ละคนมีรายละเอียดรถ
             - คง fetch มาครั้งเดียวแล้วใช้ข้อมูลซ้ำ
         - [In Progess]tab ต่อมาคงเริ่มไล่จากคนพร้อมห้อง แล้วกดไป ดูรถ [less priority]
+        - [In Progress] เพิ่มระบบ login, register ก่อนเข้า main app
+        - [In Progress] เพิ่มระบบหมวดหมู่การจัดการไว้สำหรับ ข้อมูลกับ พัสดุ
+        - [In Progress] เพิ่มระบบ track พัสดุ โดยใช้ scan
+    - database
+        - [In Progress] เพิ่ม collection ตึก _id, name
+        - [In Progress] เพิ้มข้อมูล collection Note (หมายเหตุ)
+        - [In Progress] เพิ่มข้อมูล created_by, created_at, updated_by, updated_at, removed_by, removed_at
+        - [In Progress] เพิ้มข้อมูล user และ role
     - ระบบพัสดุ
         - รอทำ app query กับ edit table เสร็จก่อน
 
