@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CidWidget extends StatefulWidget {
   final Function(String) callback;
@@ -31,7 +32,7 @@ class CidWidgetState extends State<CidWidget> {
       return false;
     }
     final RegExp cidRegex =
-        RegExp(r'^[0-9] ^[0-9]{4} ^[0-9]{5} ^[0-9]{2} ^[0-9]$');
+        RegExp(r'[0-9] [0-9]{4} [0-9]{5} [0-9]{2} [0-9]$');
     if (cidRegex.hasMatch(_textFieldValue)) {
       return true;
     } else {
@@ -62,6 +63,7 @@ class CidWidgetState extends State<CidWidget> {
           child: Padding(
             padding: const EdgeInsets.only(top: 10.0, left: 8.0),
             child: TextFormField(
+              maxLength: 17,
               textInputAction: TextInputAction.done,
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -74,6 +76,7 @@ class CidWidgetState extends State<CidWidget> {
                 return null;
               },
               decoration: InputDecoration(
+                counterText: '',
                 contentPadding: const EdgeInsets.only(left: 8.0),
                 hintText: '1 2345 67890 12 3',
                 border: OutlineInputBorder(

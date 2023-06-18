@@ -141,3 +141,17 @@ $set: {
 		
 	}
 })
+
+# add building ref to room
+###############################################
+db.buildings.find({}).forEach(function(doc) {
+	var name = doc.name;
+	db.rooms.updateMany({building_address:name},{
+		$set:{
+			building_ref:doc._id
+		},
+		$unset:{
+			building_address:"",
+		}
+	})
+})

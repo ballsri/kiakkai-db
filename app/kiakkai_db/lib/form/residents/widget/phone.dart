@@ -30,7 +30,7 @@ class PhoneWidgettState extends State<PhoneWidget> {
     if (input == "" || input == null) {
       return false;
     }
-    final RegExp phoneRegex = RegExp(r'^0[0-9]{3} [0-9]{3} [0-9]{4}');
+    final RegExp phoneRegex = RegExp(r'^0[0-9]{2} [0-9]{3} [0-9]{4}');
     if (phoneRegex.hasMatch(input)) {
       return true;
     } else {
@@ -62,6 +62,7 @@ class PhoneWidgettState extends State<PhoneWidget> {
             padding: const EdgeInsets.only(top: 10.0, left: 8.0),
             child: TextFormField(
               textInputAction: TextInputAction.done,
+              maxLength: 12,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'กรุณากรอกเบอร์โทรศัพท์';
@@ -72,6 +73,7 @@ class PhoneWidgettState extends State<PhoneWidget> {
                 return null;
               },
               decoration: InputDecoration(
+                counterText: '',
                 contentPadding: const EdgeInsets.only(left: 8.0),
                 hintText: '099 999 9999',
                 border: OutlineInputBorder(

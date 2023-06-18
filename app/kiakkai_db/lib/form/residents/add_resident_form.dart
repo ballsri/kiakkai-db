@@ -8,6 +8,8 @@ import 'package:kiakkai_db/form/residents/widget/phone.dart';
 import 'package:kiakkai_db/form/residents/widget/prefix.dart';
 import 'package:kiakkai_db/form/residents/widget/relationship.dart';
 
+import '../../mongodb.dart';
+
 class AddResidentForm extends StatefulWidget {
   const AddResidentForm({super.key});
 
@@ -25,6 +27,8 @@ class AddResidentFormState extends State<AddResidentForm> {
   String phone = "";
   String agency = "";
   String relationship = "";
+  bool _isSubmitting = false;
+  bool _isSubmitted = false;
 
   void _getAddressFromChild(String value) {
     setState(() {
@@ -77,6 +81,50 @@ class AddResidentFormState extends State<AddResidentForm> {
   @override
   Widget build(BuildContext context) {
     final double visibleHeight = MediaQuery.of(context).viewInsets.bottom;
+
+    if (_isSubmitting) {
+      return const Padding(
+          padding: EdgeInsets.only(top: 10.0),
+          child: Center(
+            child: CircularProgressIndicator(),
+          ));
+    }
+
+    if (_isSubmitted) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 10.0),
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.7,
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: Column(
+              children: [
+                const Text(
+                  'เพิ่มข้อมูลสำเร็จ',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+                 ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'กดเพื่อกลับหน้าหลัก',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: () {
         FocusScopeNode currentFocus = FocusScope.of(context);
@@ -164,7 +212,7 @@ class AddResidentFormState extends State<AddResidentForm> {
                     width: MediaQuery.of(context).size.width * 0.6,
                     height: MediaQuery.of(context).size.height * 0.05,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
                           print("save");
                           _formKey.currentState!.save();
@@ -178,6 +226,27 @@ class AddResidentFormState extends State<AddResidentForm> {
                         print("phone: $phone");
                         print("agency: $agency");
                         print("relationship: $relationship");
+
+                        var data = {
+                          "address": address,
+                          "prefix": prefix,
+                          "name": name,
+                          "lastname": lastname,
+                          "cid": cid,
+                          "phone": phone,
+                          "agency": agency,
+                          "relationship": relationship,
+                        };
+                        setState(() {
+                          _isSubmitting = true;
+                        });
+                        final res = await MongoDatabase.addResident(data: data);
+                        if (res.isSuccess) {
+                          setState(() {
+                            _isSubmitting = false;
+                            _isSubmitted = true;
+                          });
+                        }
                       },
                       child: Text("สร้าง"),
                     ),

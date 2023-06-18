@@ -63,6 +63,7 @@ class AddressWidgetState extends State<AddressWidget> {
           child: Padding(
             padding: const EdgeInsets.only(top: 10.0, left: 6.0),
             child: TextFormField(
+              maxLength: 6,
               textInputAction: TextInputAction.done,
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -74,6 +75,7 @@ class AddressWidgetState extends State<AddressWidget> {
                 return null;
               },
               decoration: InputDecoration(
+                counterText: '',
                 contentPadding: const EdgeInsets.only(left: 6.0),
                 hintText: '49/1',
                 border: OutlineInputBorder(

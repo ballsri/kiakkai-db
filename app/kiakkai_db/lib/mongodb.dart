@@ -102,4 +102,33 @@ class MongoDatabase {
         .toList();
     return vehicles;
   }
+
+  static Future<WriteResult> addResident({required Map<String, String> data}) async {
+    var db = await connect();
+    var address = data['address'];
+    var roomRef = await db
+        .collection(collectionRoom)
+        .findOne(where.eq('address', address));
+    var input = {
+      'prefix': data['prefix'],
+      'name': data['name'],
+      'lastname': data['lastname'],
+      'room_ref': roomRef!['_id'],
+      'phone': data['phone'],
+      'citizen_id': data['cid'],
+      'agency': data['agency'],
+      'relationship': data['relationship'],
+      'is_owner': data['relationship'] == 'เจ้าบ้าน' ? true : false,
+      'created_at': DateTime.now().toString(),
+      'created_by': 'admin',
+      'updated_at': null,
+      'updated_by': null,
+      'removed_at': null,
+      'removed_by': null,
+      'joined_at': null,
+      'left_at': null,
+    };
+
+    return await db.collection(collectionResident).insertOne(input);
+  }
 }
