@@ -45,11 +45,13 @@ class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool isRefreshing = false;
+  bool _isSelectMode = false;
   bool _isSearchVisible = false;
   TextEditingController _searchController = TextEditingController();
 
   List<Map<String, dynamic>> objects = [];
   ValueNotifier<String> filterNotifier = ValueNotifier<String>('');
+  List<String> selectedRows = [];
 
   @override
   void initState() {
@@ -83,6 +85,19 @@ class _HomePageState extends State<HomePage>
   void _setRefresh(bool value) {
     setState(() {
       isRefreshing = value;
+      selectedRows.clear();
+    });
+  }
+
+  void _toggleSelectMode() {
+    setState(() {
+      _isSelectMode = !_isSelectMode;
+    });
+  }
+
+  void _onSelectedRowsChanged(List<String> selectedRows) {
+    setState(() {
+      this.selectedRows = selectedRows;
     });
   }
 
@@ -132,29 +147,56 @@ class _HomePageState extends State<HomePage>
                 IconButton(
                     visualDensity: VisualDensity.compact,
                     icon: _isSearchVisible
-                        ? const Icon(Icons.close)
+                        ? const Icon(Icons.cancel)
                         : const Icon(Icons.search),
                     tooltip: 'Search',
                     onPressed: _toggleSearchVisibility),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  tooltip: 'Add data',
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return  ModalAddData(tab: _tabController.index);
-                      },
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  tooltip: 'Delete data',
-                  onPressed: () {
-                    // handle the press
-                  },
-                ),
+                !_isSelectMode
+                    ? IconButton(
+                        icon: const Icon(Icons.add),
+                        tooltip: 'Add data',
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return ModalAddData(tab: _tabController.index);
+                            },
+                          );
+                        },
+                      )
+                    : Container(),
+                _isSelectMode
+                    ? IconButton(
+                        icon: const Icon(Icons.delete),
+                        tooltip: 'Delete data',
+                        onPressed: selectedRows.isNotEmpty ? () async {
+                          switch (_tabController.index) {
+                            case 0:
+                              // deleteRoom(selectedRows);
+                              break;
+                            case 1:
+                              await MongoDatabase.deleteResidents(
+                                  ids: selectedRows);
+                              _setRefresh(true);
+                              break;
+                            case 2:
+                              // deleteVehicle(selectedRows);
+                              break;
+                          }
+                        } : null,
+                      )
+                    : Container(),
+                !_isSelectMode
+                    ? IconButton(
+                        icon: const Icon(Icons.select_all),
+                        tooltip: 'Toggle select mode',
+                        onPressed: _toggleSelectMode,
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.close),
+                        tooltip: 'Toggle select mode',
+                        onPressed: _toggleSelectMode,
+                      ),
               ],
               // The elevation value of the app bar when scroll view has
               // scrolled underneath the app bar.
@@ -190,13 +232,23 @@ class _HomePageState extends State<HomePage>
                             filter: filter,
                             onDataLoaded: onDataLoaded,
                             isRefreshing: isRefreshing,
-                            setRefresh: _setRefresh)
+                            setRefresh: _setRefresh,
+                            isSelectMode: _isSelectMode,
+                            toggleSelectMode: _toggleSelectMode,
+                            selectedRows: selectedRows,
+                            onSelectedRowsChanged: _onSelectedRowsChanged,
+                          )
                         : Material(
                             child: ResidentTableWidget(
-                                objects: objects,
-                                filter: filter,
-                                isRefreshing: isRefreshing,
-                                setRefresh: _setRefresh),
+                              objects: objects,
+                              filter: filter,
+                              isRefreshing: isRefreshing,
+                              setRefresh: _setRefresh,
+                              isSelectMode: _isSelectMode,
+                              toggleSelectMode: _toggleSelectMode,
+                              selectedRows: selectedRows,
+                              onSelectedRowsChanged: _onSelectedRowsChanged,
+                            ),
                           );
                   },
                 ),
@@ -226,14 +278,31 @@ class ModalAddData extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: IconButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                icon: const Icon(Icons.close),
-              ),
+            Row(
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      'เพิ่มข้อมูลผู้พัก',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.topRight,
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.1,
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      icon: const Icon(Icons.close),
+                    ),
+                  ),
+                ),
+              ],
             ),
             if (tab == 0)
               Text(
@@ -241,15 +310,9 @@ class ModalAddData extends StatelessWidget {
                 style: Theme.of(context).textTheme.headlineMedium,
               )
             else if (tab == 1)
-              Column(children: [
-                Text(
-                  'เพิ่มข้อมูลผู้พัก',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const Material(
-                  child: AddResidentForm(),
-                )
-              ])
+              const Material(
+                child: AddResidentForm(),
+              )
             else if (tab == 2)
               Text(
                 'เพิ่มข้อมูลรถ',

@@ -7,13 +7,21 @@ class ResidentTable extends StatelessWidget {
   final String filter;
   final Function(List<Map<String, dynamic>>)? onDataLoaded;
   final dynamic Function(bool)? setRefresh;
+  final dynamic Function()? toggleSelectMode;
+  final bool isSelectMode;
   final bool isRefreshing;
+  final List<String> selectedRows;
+  final void Function(List<String>)? onSelectedRowsChanged;
   const ResidentTable(
       {super.key,
       required this.filter,
       this.onDataLoaded,
       this.setRefresh,
-      required this.isRefreshing});
+      required this.isRefreshing,
+      this.toggleSelectMode,
+      required this.isSelectMode,
+      required this.selectedRows,
+      this.onSelectedRowsChanged});
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
@@ -38,6 +46,10 @@ class ResidentTable extends StatelessWidget {
               filter: filter,
               setRefresh: setRefresh,
               isRefreshing: isRefreshing,
+              isSelectMode: isSelectMode,
+              toggleSelectMode: toggleSelectMode,
+              selectedRows: selectedRows,
+              onSelectedRowsChanged: onSelectedRowsChanged,
             ),
           );
         }
@@ -49,14 +61,22 @@ class ResidentTable extends StatelessWidget {
 class ResidentTableWidget extends StatefulWidget {
   final List<Map<String, dynamic>> objects;
   final String filter;
+  final bool isSelectMode;
   final bool isRefreshing;
   final dynamic Function(bool)? setRefresh;
+  final dynamic Function()? toggleSelectMode;
+  final List<String> selectedRows;
+  final void Function(List<String>)? onSelectedRowsChanged;
   const ResidentTableWidget(
       {super.key,
       required this.objects,
       required this.filter,
       this.setRefresh,
-      required this.isRefreshing});
+      required this.isRefreshing,
+      required this.isSelectMode,
+      this.toggleSelectMode,
+      required this.selectedRows,
+      this.onSelectedRowsChanged});
 
   @override
   State<StatefulWidget> createState() => _ResidentTableWidgetState();
@@ -171,28 +191,27 @@ class _ResidentTableWidgetState extends State<ResidentTableWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return 
-          SizedBox(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            child: GestureDetector(
-      onVerticalDragStart: _handleDragStart,
-      onVerticalDragUpdate: _handleDragUpdate,
-      onVerticalDragEnd: _handleDragEnd,
-      child: NotificationListener<ScrollNotification>(
-        onNotification: (notification) {
-          if (notification is ScrollEndNotification && _dragExtent >= 200) {
-            // Handle the long pull-down and release
-            widget.setRefresh!(true);
-          }
-          return true;
-        },
-        child: RefreshIndicator(
-          onRefresh: () async {
-            // Perform the action on pull-down and release
-            widget.setRefresh!(true);
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      child: GestureDetector(
+        onVerticalDragStart: _handleDragStart,
+        onVerticalDragUpdate: _handleDragUpdate,
+        onVerticalDragEnd: _handleDragEnd,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification is ScrollEndNotification && _dragExtent >= 200) {
+              // Handle the long pull-down and release
+              widget.setRefresh!(true);
+            }
+            return true;
           },
-          child: Scrollbar(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              // Perform the action on pull-down and release
+              widget.setRefresh!(true);
+            },
+            child: Scrollbar(
               interactive: true,
               thumbVisibility: true,
               thickness: 7.0,
@@ -259,7 +278,10 @@ class _ResidentTableWidgetState extends State<ResidentTableWidget> {
                         ),
                       ],
                       rows: objects.map((object) {
-                        final id = object['_id']?.toString() ?? '';
+                        final idString = object['_id'].toString();
+                        final idPattern = RegExp(r'\("(\w+)"\)');
+                        final match = idPattern.firstMatch(idString);
+                        final id = match?.group(1) ?? '';
                         final prefix = object['prefix']?.toString() ?? '';
                         final name = object['name']?.toString() ?? '';
                         final lastname = object['lastname']?.toString() ?? '';
@@ -271,24 +293,79 @@ class _ResidentTableWidgetState extends State<ResidentTableWidget> {
                         final roomUnit = room['address'] ?? '';
                         final fullname = '$prefix$name $lastname';
 
-                        return DataRow(
-                          cells: [
-                            DataCell(Text(roomUnit)),
-                            DataCell(
-                              Text(fullname),
-                              // onTap: () {
-                              //   Navigator.push(
-                              //       context,
-                              //       MaterialPageRoute(
-                              //           builder: (context) => ResidentList(
-                              //               roomUnit: roomUnit)));
-                              // }
-                            ),
-                            DataCell(Text(agency)),
-                            DataCell(Text(relationship)),
-                            DataCell(Text(phone)),
-                          ],
-                        );
+                        return widget.isSelectMode
+                            ? DataRow(
+                                selected: widget.selectedRows.contains(
+                                    id), // Check if the row is selected
+                                onSelectChanged: (selected) {
+                                  // Toggle the selection state of the row
+                                  setState(() {
+                                    if (selected!) {
+                                      widget.selectedRows.add(
+                                          id); // Add the row index to the list of selected rows
+                                    } else {
+                                      widget.selectedRows.remove(
+                                          id); // Remove the row index from the list of selected rows
+                                    }
+
+                                    widget.onSelectedRowsChanged!(
+                                        widget.selectedRows);
+                                  });
+                                },
+                                cells: [
+                                  DataCell(
+                                    Text(roomUnit),
+                                    // onTap: () {
+                                    //   Navigator.push(
+                                    //       context,
+                                    //       MaterialPageRoute(
+                                    //           builder: (context) => ResidentList(
+                                    //               roomUnit: roomUnit)));
+                                    // }
+                                  ),
+                                  DataCell(
+                                    Text(fullname),
+                                    // onTap: () {
+                                    //   Navigator.push(
+                                    //       context,
+                                    //       MaterialPageRoute(
+                                    //           builder: (context) => ResidentList(
+                                    //               roomUnit: roomUnit)));
+                                    // }
+                                  ),
+                                  DataCell(Text(agency)),
+                                  DataCell(Text(relationship)),
+                                  DataCell(Text(phone)),
+                                ],
+                              )
+                            : DataRow(
+                                cells: [
+                                  DataCell(
+                                    Text(roomUnit),
+                                    // onTap: () {
+                                    //   Navigator.push(
+                                    //       context,
+                                    //       MaterialPageRoute(
+                                    //           builder: (context) => ResidentList(
+                                    //               roomUnit: roomUnit)));
+                                    // }
+                                  ),
+                                  DataCell(
+                                    Text(fullname),
+                                    // onTap: () {
+                                    //   Navigator.push(
+                                    //       context,
+                                    //       MaterialPageRoute(
+                                    //           builder: (context) => ResidentList(
+                                    //               roomUnit: roomUnit)));
+                                    // }
+                                  ),
+                                  DataCell(Text(agency)),
+                                  DataCell(Text(relationship)),
+                                  DataCell(Text(phone)),
+                                ],
+                              );
+                        ;
                       }).toList(),
                     ),
                   ),

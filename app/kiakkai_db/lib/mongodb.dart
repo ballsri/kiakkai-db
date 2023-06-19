@@ -103,7 +103,8 @@ class MongoDatabase {
     return vehicles;
   }
 
-  static Future<WriteResult> addResident({required Map<String, String> data}) async {
+  static Future<WriteResult> addResident(
+      {required Map<String, String> data}) async {
     var db = await connect();
     var address = data['address'];
     var roomRef = await db
@@ -130,5 +131,14 @@ class MongoDatabase {
     };
 
     return await db.collection(collectionResident).insertOne(input);
+  }
+
+  static Future<WriteResult> deleteResidents({required List<String> ids}) async {
+    var db = await connect();
+    print(ids);
+    // convert string to ObjectId
+    var idsObj = ids.map((e) => ObjectId.parse(e)).toList();
+    return await db
+        .collection(collectionResident).deleteMany(where.oneFrom('_id', idsObj));
   }
 }

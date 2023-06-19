@@ -135,7 +135,7 @@ class AddResidentFormState extends State<AddResidentForm> {
       child: SizedBox(
         // change by size of the keyboard
         height: MediaQuery.of(context).size.height * 0.8 - visibleHeight,
-        child: ListView(padding: EdgeInsets.all(16.0), children: [
+        child: ListView(padding: const EdgeInsets.all(16.0), children: [
           Form(
             key: _formKey,
             child: Column(
