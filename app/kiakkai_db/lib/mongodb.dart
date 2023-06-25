@@ -10,6 +10,13 @@ class MongoDatabase {
     return db;
   }
 
+  static stringId2ObjectId(String id) {
+    final idString = id.toString();
+    final idPattern = RegExp(r'\("(\w+)"\)');
+    final match = idPattern.firstMatch(idString);
+    return match?.group(1) ?? '';
+  }
+
   static Future<List<Map<String, dynamic>>> getRooms() async {
     var db = await connect();
     var rooms = await db.collection(collectionRoom).find().toList();
@@ -46,13 +53,6 @@ class MongoDatabase {
     var vehicle =
         await db.collection(collectionVehicle).findOne(where.eq('_id', id));
     return vehicle;
-  }
-
-  static Future<List<Map<String, dynamic>>> getElectricMeters() async {
-    var db = await connect();
-    var electricMeters =
-        await db.collection(collectionElectricMeter).find().toList();
-    return electricMeters;
   }
 
   static Future<Map<String, dynamic>> getElectricMeter(String id) {
@@ -133,12 +133,46 @@ class MongoDatabase {
     return await db.collection(collectionResident).insertOne(input);
   }
 
-  static Future<WriteResult> deleteResidents({required List<String> ids}) async {
+  static Future<WriteResult> deleteResidents(
+      {required List<String> ids}) async {
     var db = await connect();
     print(ids);
     // convert string to ObjectId
     var idsObj = ids.map((e) => ObjectId.parse(e)).toList();
     return await db
-        .collection(collectionResident).deleteMany(where.oneFrom('_id', idsObj));
+        .collection(collectionResident)
+        .deleteMany(where.oneFrom('_id', idsObj));
   }
+
+  static Future<List<Map<String, dynamic>>> getResidentAndVehicleAndEmeterByRoomUnit(
+      String roomUnit) async {
+    var db = await connect();
+    var room = await db
+        .collection(collectionRoom)
+        .findOne(where.eq('address', roomUnit));
+
+    // add the pipeline to get vehicle from a list of vihecle ref in each resident
+    final pipeline = AggregationPipelineBuilder()
+        .addStage(Match(where.eq('room_ref', room['_id']).map['\$query']))
+        .addStage(Lookup(
+            from: collectionVehicle,
+            localField: 'vehicle_ref',
+            foreignField: '_id',
+            as: 'vehicle'))
+        .addStage(Lookup(
+            from: collectionElectricMeter,
+            localField: 'e_meter_ref',
+            foreignField: '_id',
+            as: 'e_meter'))
+        .build();
+
+    var resident = await db
+        .collection(collectionResident)
+        .aggregateToStream(pipeline)
+        .toList();
+
+    return resident;
+  }
+
+
 }

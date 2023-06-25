@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kiakkai_db/form/rooms/edit_room_form.dart';
 import 'package:kiakkai_db/resident_list.dart';
 
 import 'mongodb.dart';
@@ -191,183 +192,179 @@ class _ResidentTableWidgetState extends State<ResidentTableWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height,
-      width: MediaQuery.of(context).size.width,
-      child: GestureDetector(
-        onVerticalDragStart: _handleDragStart,
-        onVerticalDragUpdate: _handleDragUpdate,
-        onVerticalDragEnd: _handleDragEnd,
-        child: NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            if (notification is ScrollEndNotification && _dragExtent >= 200) {
-              // Handle the long pull-down and release
-              widget.setRefresh!(true);
-            }
-            return true;
+    print(MediaQuery.of(context).size.height);
+    return GestureDetector(
+      onVerticalDragStart: _handleDragStart,
+      onVerticalDragUpdate: _handleDragUpdate,
+      onVerticalDragEnd: _handleDragEnd,
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification is ScrollEndNotification && _dragExtent >= 200) {
+            // Handle the long pull-down and release
+            widget.setRefresh!(true);
+          }
+          return true;
+        },
+        child: RefreshIndicator(
+          onRefresh: () async {
+            // Perform the action on pull-down and release
+            widget.setRefresh!(true);
           },
-          child: RefreshIndicator(
-            onRefresh: () async {
-              // Perform the action on pull-down and release
-              widget.setRefresh!(true);
-            },
+          child: Scrollbar(
+            interactive: true,
+            thumbVisibility: true,
+            thickness: 7.0,
+            controller: _vertical,
             child: Scrollbar(
-              interactive: true,
               thumbVisibility: true,
+              interactive: true,
+              controller: _horizontal,
               thickness: 7.0,
-              controller: _vertical,
-              child: Scrollbar(
-                thumbVisibility: true,
-                interactive: true,
-                controller: _horizontal,
-                thickness: 7.0,
-                notificationPredicate: (notif) => notif.depth == 1,
+              notificationPredicate: (notif) => notif.depth == 1,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                controller: _vertical,
                 child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  controller: _vertical,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    controller: _horizontal,
-                    child: DataTable(
-                      sortColumnIndex: _sortColumnIndex,
-                      sortAscending: _sortAscending,
-                      columnSpacing: 30.0,
-                      border: TableBorder.all(
-                        width: 0.5,
-                        color: ThemeData.dark().primaryColor,
-                      ),
-                      columns: [
-                        DataColumn(
-                            label: const Text('ห้อง',
-                                style: TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold)),
-                            onSort: (columnIndex, ascending) {
-                              _sortObjects(columnIndex, ascending);
-                            }),
-                        DataColumn(
-                            label: const Text('ยศ-ชื่อ-นามสกุล',
-                                style: TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold)),
-                            onSort: (columnIndex, ascending) {
-                              _sortObjects(columnIndex, ascending);
-                            }),
-                        DataColumn(
-                          label: const Text('หน่วยงาน',
+                  scrollDirection: Axis.horizontal,
+                  controller: _horizontal,
+                  // child: SizedBox(
+                  //   width: MediaQuery.of(context)
+                  //       .size
+                  //       .width, // Set the width to full width
+                  child: DataTable(
+                    sortColumnIndex: _sortColumnIndex,
+                    sortAscending: _sortAscending,
+                    columnSpacing: 30.0,
+                    border: TableBorder.all(
+                      width: 0.5,
+                      color: ThemeData.dark().primaryColor,
+                    ),
+                    columns: [
+                      DataColumn(
+                          label: const Text('ห้อง',
                               style: TextStyle(
                                   fontSize: 16.0, fontWeight: FontWeight.bold)),
                           onSort: (columnIndex, ascending) {
                             _sortObjects(columnIndex, ascending);
-                          },
-                        ),
-                        DataColumn(
-                            label: const Text('ความสำพันธ์',
-                                style: TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold)),
-                            onSort: (columnIndex, ascending) {
-                              _sortObjects(columnIndex, ascending);
-                            }),
-                        DataColumn(
-                          label: const Text('เบอร์โทรศัพท์',
+                          }),
+                      DataColumn(
+                          label: const Text('ยศ-ชื่อ-นามสกุล',
                               style: TextStyle(
                                   fontSize: 16.0, fontWeight: FontWeight.bold)),
-                          onSort: (columnIndex, ascending) =>
-                              {_sortObjects(columnIndex, ascending)},
-                        ),
-                      ],
-                      rows: objects.map((object) {
-                        final idString = object['_id'].toString();
-                        final idPattern = RegExp(r'\("(\w+)"\)');
-                        final match = idPattern.firstMatch(idString);
-                        final id = match?.group(1) ?? '';
-                        final prefix = object['prefix']?.toString() ?? '';
-                        final name = object['name']?.toString() ?? '';
-                        final lastname = object['lastname']?.toString() ?? '';
-                        final agency = object['agency']?.toString() ?? '';
-                        final phone = object['phone']?.toString() ?? '';
-                        final relationship =
-                            object['relationship']?.toString() ?? '';
-                        final room = object['room']?[0] ?? '';
-                        final roomUnit = room['address'] ?? '';
-                        final fullname = '$prefix$name $lastname';
+                          onSort: (columnIndex, ascending) {
+                            _sortObjects(columnIndex, ascending);
+                          }),
+                      DataColumn(
+                        label: const Text('หน่วยงาน',
+                            style: TextStyle(
+                                fontSize: 16.0, fontWeight: FontWeight.bold)),
+                        onSort: (columnIndex, ascending) {
+                          _sortObjects(columnIndex, ascending);
+                        },
+                      ),
+                      DataColumn(
+                          label: const Text('ความสำพันธ์',
+                              style: TextStyle(
+                                  fontSize: 16.0, fontWeight: FontWeight.bold)),
+                          onSort: (columnIndex, ascending) {
+                            _sortObjects(columnIndex, ascending);
+                          }),
+                      DataColumn(
+                        label: const Text('เบอร์โทรศัพท์',
+                            style: TextStyle(
+                                fontSize: 16.0, fontWeight: FontWeight.bold)),
+                        onSort: (columnIndex, ascending) =>
+                            {_sortObjects(columnIndex, ascending)},
+                      ),
+                    ],
+                    rows: objects.map((object) {
+                      final idString = object['_id'].toString();
+                      final idPattern = RegExp(r'\("(\w+)"\)');
+                      final match = idPattern.firstMatch(idString);
+                      final id = match?.group(1) ?? '';
+                      final prefix = object['prefix']?.toString() ?? '';
+                      final name = object['name']?.toString() ?? '';
+                      final lastname = object['lastname']?.toString() ?? '';
+                      final agency = object['agency']?.toString() ?? '';
+                      final phone = object['phone']?.toString() ?? '';
+                      final relationship =
+                          object['relationship']?.toString() ?? '';
+                      final room = object['room']?[0] ?? '';
+                      final roomUnit = room['address'] ?? '';
+                      final fullname = '$prefix$name $lastname';
 
-                        return widget.isSelectMode
-                            ? DataRow(
-                                selected: widget.selectedRows.contains(
-                                    id), // Check if the row is selected
-                                onSelectChanged: (selected) {
-                                  // Toggle the selection state of the row
-                                  setState(() {
-                                    if (selected!) {
-                                      widget.selectedRows.add(
-                                          id); // Add the row index to the list of selected rows
-                                    } else {
-                                      widget.selectedRows.remove(
-                                          id); // Remove the row index from the list of selected rows
-                                    }
+                      return widget.isSelectMode
+                          ? DataRow(
+                              selected: widget.selectedRows
+                                  .contains(id), // Check if the row is selected
+                              onSelectChanged: (selected) {
+                                // Toggle the selection state of the row
+                                setState(() {
+                                  if (selected!) {
+                                    widget.selectedRows.add(
+                                        id); // Add the row index to the list of selected rows
+                                  } else {
+                                    widget.selectedRows.remove(
+                                        id); // Remove the row index from the list of selected rows
+                                  }
 
-                                    widget.onSelectedRowsChanged!(
-                                        widget.selectedRows);
-                                  });
-                                },
-                                cells: [
-                                  DataCell(
-                                    Text(roomUnit),
-                                    // onTap: () {
-                                    //   Navigator.push(
-                                    //       context,
-                                    //       MaterialPageRoute(
-                                    //           builder: (context) => ResidentList(
-                                    //               roomUnit: roomUnit)));
-                                    // }
-                                  ),
-                                  DataCell(
-                                    Text(fullname),
-                                    // onTap: () {
-                                    //   Navigator.push(
-                                    //       context,
-                                    //       MaterialPageRoute(
-                                    //           builder: (context) => ResidentList(
-                                    //               roomUnit: roomUnit)));
-                                    // }
-                                  ),
-                                  DataCell(Text(agency)),
-                                  DataCell(Text(relationship)),
-                                  DataCell(Text(phone)),
-                                ],
-                              )
-                            : DataRow(
-                                cells: [
-                                  DataCell(
-                                    Text(roomUnit),
-                                    // onTap: () {
-                                    //   Navigator.push(
-                                    //       context,
-                                    //       MaterialPageRoute(
-                                    //           builder: (context) => ResidentList(
-                                    //               roomUnit: roomUnit)));
-                                    // }
-                                  ),
-                                  DataCell(
-                                    Text(fullname),
-                                    // onTap: () {
-                                    //   Navigator.push(
-                                    //       context,
-                                    //       MaterialPageRoute(
-                                    //           builder: (context) => ResidentList(
-                                    //               roomUnit: roomUnit)));
-                                    // }
-                                  ),
-                                  DataCell(Text(agency)),
-                                  DataCell(Text(relationship)),
-                                  DataCell(Text(phone)),
-                                ],
-                              );
-                        ;
-                      }).toList(),
-                    ),
+                                  widget.onSelectedRowsChanged!(
+                                      widget.selectedRows);
+                                });
+                              },
+                              cells: [
+                                DataCell(
+                                  Text(roomUnit),
+                                  // onTap: () {
+                                  //   Navigator.push(
+                                  //       context,
+                                  //       MaterialPageRoute(
+                                  //           builder: (context) => ResidentList(
+                                  //               roomUnit: roomUnit)));
+                                  // }
+                                ),
+                                DataCell(
+                                  Text(fullname),
+                                  // onTap: () {
+                                  //   Navigator.push(
+                                  //       context,
+                                  //       MaterialPageRoute(
+                                  //           builder: (context) => ResidentList(
+                                  //               roomUnit: roomUnit)));
+                                  // }
+                                ),
+                                DataCell(Text(agency)),
+                                DataCell(Text(relationship)),
+                                DataCell(Text(phone)),
+                              ],
+                            )
+                          : DataRow(
+                              cells: [
+                                DataCell(
+                                  Text(roomUnit),
+                                  onTap: () {
+                                    Navigator.push(context,
+                                        MaterialPageRoute<void>(
+                                      builder: (BuildContext context) {
+                                        return Scaffold(
+                                            appBar: AppBar(
+                                              title:
+                                                  Text("ข้อมูลห้อง $roomUnit"),
+                                            ),
+                                            body: EditRoom(
+                                              roomUnit: roomUnit,
+                                            ));
+                                      },
+                                    ));
+                                  },
+                                ),
+                                DataCell(Text(fullname)),
+                                DataCell(Text(agency)),
+                                DataCell(Text(relationship)),
+                                DataCell(Text(phone)),
+                              ],
+                            );
+                    }).toList(),
                   ),
                 ),
               ),
@@ -375,6 +372,7 @@ class _ResidentTableWidgetState extends State<ResidentTableWidget> {
           ),
         ),
       ),
+      // ),
     );
   }
 
